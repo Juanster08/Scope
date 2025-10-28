@@ -21,10 +21,22 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL ?? '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 const googleSheetsId = process.env.GOOGLE_SHEETS_ID ?? '';
 const googleEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ?? '';
-const googlePrivateKey = (process.env.GOOGLE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n');
+const googlePrivateKeyRaw = process.env.GOOGLE_PRIVATE_KEY ?? '';
+const googlePrivateKey = googlePrivateKeyRaw.replace(/\\n/g, '\n');
 
-if (!supabaseUrl || !supabaseServiceRoleKey || !googleSheetsId || !googleEmail || !googlePrivateKey) {
-  console.error('Missing environment variables for Sheets import.');
+const missingEnv: string[] = [];
+
+if (!supabaseUrl) missingEnv.push('VITE_SUPABASE_URL');
+if (!supabaseServiceRoleKey) missingEnv.push('SUPABASE_SERVICE_ROLE_KEY');
+if (!googleSheetsId) missingEnv.push('GOOGLE_SHEETS_ID');
+if (!googleEmail) missingEnv.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+if (!googlePrivateKeyRaw) missingEnv.push('GOOGLE_PRIVATE_KEY');
+
+if (missingEnv.length) {
+  console.error(
+    `Missing environment variables for Sheets import: ${missingEnv.join(', ')}.`
+  );
+  console.error('Verifica tu archivo .env y vuelve a ejecutar "npm run import:sheets".');
   process.exit(1);
 }
 
