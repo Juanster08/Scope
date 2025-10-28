@@ -51,6 +51,44 @@ Dashboard administrativo inspirado en Power BI para centralizar la operación de
    npm run import:sheets
    ```
 
+## Configurar la sincronización con Google Sheets
+
+1. **Crea un proyecto y una cuenta de servicio en Google Cloud**
+   - Entra a [console.cloud.google.com](https://console.cloud.google.com/).
+   - Crea un proyecto (o usa uno existente) y habilita la API de Google Sheets.
+   - En "APIs y servicios" → "Credenciales" crea una cuenta de servicio y descarga la clave JSON.
+
+2. **Obtén las variables para el `.env`**
+   - `GOOGLE_SERVICE_ACCOUNT_EMAIL` corresponde al campo `client_email` del JSON.
+   - `GOOGLE_PRIVATE_KEY` es el valor de `private_key`. Sustituye cada salto de línea por `\n` y envuélvelo entre comillas dobles, por ejemplo:
+
+     ```env
+     GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIB...\n-----END PRIVATE KEY-----\n"
+     ```
+
+3. **Comparte la hoja de cálculo con la cuenta de servicio**
+   - Abre la hoja que contiene las ventas.
+   - Pulsa "Compartir" e introduce el correo de la cuenta de servicio (`...@...gserviceaccount.com`) con permiso de lector.
+   - Copia el ID del documento (la cadena entre `/d/` y `/edit` en la URL) y colócalo en `GOOGLE_SHEETS_ID`.
+
+4. **Verifica el rango esperado del script**
+   - El script lee la pestaña `Ventas` desde `A2` hasta `L1000`. Ajusta el rango en `scripts/importFromSheets.ts` si tu hoja usa otro nombre o columnas.
+   - El orden de las columnas debe coincidir con: número de contrato, cliente, identidad, fecha de contratación, fecha de instalación, paquete, tecnología, monto, estado, zona/ciudad, identidad del vendedor y código de aliado.
+
+5. **Ejecuta la importación**
+   - Con el `.env` configurado y las dependencias instaladas, ejecuta:
+
+     ```bash
+     npm run import:sheets
+     ```
+
+   - El script autentica con Google, descarga las filas y hace `upsert` en la tabla `ventas` de Supabase usando `SUPABASE_SERVICE_ROLE_KEY`.
+   - Si falta alguna variable (`SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_PRIVATE_KEY`, etc.) verás un mensaje indicando exactamente cuál debes completar antes de reintentar.
+
+6. **Programa sincronizaciones periódicas (opcional)**
+   - Puedes ejecutar el comando manualmente cuando quieras refrescar datos.
+   - Para automatizarlo, usa un cron job (por ejemplo, GitHub Actions, Supabase Edge Functions o un servidor propio) que ejecute `npm run import:sheets` con las mismas variables de entorno.
+
 ## Scripts disponibles
 
 - `npm run dev` – Inicia Vite en modo desarrollo.
